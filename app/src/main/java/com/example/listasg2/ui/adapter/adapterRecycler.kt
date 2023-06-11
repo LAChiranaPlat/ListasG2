@@ -9,6 +9,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.listasg2.databinding.TemplateItemRvBinding
 import com.example.listasg2.ui.Details
@@ -17,11 +19,25 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 //diffutil
 
-class adapterRecycler(var lista:ArrayList<ItemListUser> ):RecyclerView.Adapter<adapterRecycler.ContentViews>() {
+class adapterRecycler:RecyclerView.Adapter<adapterRecycler.ContentViews>() {
 
     lateinit var ct:Context
 
     class ContentViews(var layout: TemplateItemRvBinding):RecyclerView.ViewHolder(layout.root)
+
+    val callback=object : DiffUtil.ItemCallback<ItemListUser>(){
+
+        override fun areItemsTheSame(oldItem: ItemListUser, newItem: ItemListUser): Boolean {
+            return true
+        }
+
+        override fun areContentsTheSame(oldItem: ItemListUser, newItem: ItemListUser): Boolean {
+           return oldItem.nombres == newItem.nombres
+        }
+
+    }
+
+    var dUtil=AsyncListDiffer(this,callback)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContentViews {
         ct=parent.context
@@ -32,11 +48,11 @@ class adapterRecycler(var lista:ArrayList<ItemListUser> ):RecyclerView.Adapter<a
 
     }
 
-    override fun getItemCount()= lista.size
+    override fun getItemCount()= dUtil.currentList.size
 
     override fun onBindViewHolder(holder: ContentViews, position: Int) {
 
-        var itemCurrent=lista[position]
+        var itemCurrent=dUtil.currentList[position]
 
         holder.layout.apply {
 
@@ -60,9 +76,9 @@ class adapterRecycler(var lista:ArrayList<ItemListUser> ):RecyclerView.Adapter<a
                     .setMessage("Esta seguro de eliminar al usuario: ${itemCurrent.nombres}")
                     .setPositiveButton("Eliminar"){x,y->
 
-                        lista.removeAt(position)
+                        //dUtil.currentList.removeAt(position)
                         notifyDataSetChanged()
-                        Log.i("result",lista.toString())
+                        Log.i("result",dUtil.currentList.toString())
 
                     }
                     .setNegativeButton("Cancelar"){x,y->}
